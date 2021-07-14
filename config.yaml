@@ -1,0 +1,2 @@
+SQLALCHEMY_DATABASE_URI: 'mysql+pymysql://gandalf:youshallpass@localhost/hwi_abc'
+SESSION_SECRET: sephora
