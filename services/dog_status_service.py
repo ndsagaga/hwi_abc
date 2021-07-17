@@ -11,11 +11,16 @@ def getCurrentStatusForDog(tag):
     Get all entities
     :returns: all entity
     '''
-    return DogStatus.query.with_entities(DogStatus.tag, DogStatus.status, DogStatus.timestamp).filter_by(tag=tag).order_by(DogStatus.timestamp.desc()).first()
+    return DogStatus.query.filter_by(tag=tag).order_by(DogStatus.timestamp.desc()).first()
 
 def getForAllDogs():
-    return DogStatus.query.with_entities(DogStatus.tag, DogStatus.status, func.max(DogStatus.timestamp)).group_by(DogStatus.tag).all()
+    latest_dog_statuses = db.engine.execute("SELECT t1.* FROM dog_status t1   JOIN (SELECT tag, MAX(timestamp) timestamp FROM dog_status GROUP BY tag) t2     ON t1.tag = t2.tag AND t1.timestamp = t2.timestamp;")
+    return latest_dog_statuses
 
+def getAll():
+    latest_dog_statuses = db.engine.execute("SELECT * FROM dog_status ORDER BY tag ASC, timestamp DESC")
+    return latest_dog_statuses
+    
 def post(body):
     '''
     Create entity with body
@@ -24,7 +29,6 @@ def post(body):
     '''
     dog_status = DogStatus(**body)
     db.session.add(dog_status)
-    db.session.commit()
     return dog_status
 
 def put(body):
@@ -38,7 +42,6 @@ def put(body):
         dog_status = DogStatus(**body)
         db.session.merge(dog_status)
         db.session.flush()
-        db.session.commit()
         return dog_status
     raise NotFound('no such entity found with id=' + str(body['id']))
 
@@ -51,7 +54,6 @@ def delete(id):
     dog_status = DogStatus.query.get(id)
     if dog_status:
         db.session.delete(dog_status)
-        db.session.commit()
         return {'success': True}
     raise NotFound('no such entity found with id=' + str(id))
 

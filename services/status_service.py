@@ -19,7 +19,6 @@ def post(body):
     '''
     status = Status(**body)
     db.session.add(status)
-    db.session.commit()
     return status
 
 def put(body):
@@ -33,7 +32,6 @@ def put(body):
         status = Status(**body)
         db.session.merge(status)
         db.session.flush()
-        db.session.commit()
         return status
     raise NotFound('no such entity found with id=' + str(body['id']))
 
@@ -46,7 +44,6 @@ def delete(id):
     status = Status.query.get(id)
     if status:
         db.session.delete(status)
-        db.session.commit()
         return {'success': True}
     raise NotFound('no such entity found with id=' + str(id))
 

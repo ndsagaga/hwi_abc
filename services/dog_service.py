@@ -5,6 +5,7 @@ from config import db
 from werkzeug.exceptions import NotFound
 from sqlalchemy import or_
 from models.dog_status import DogStatus
+from . import dog_status_service
 
 def getAll():
     '''
@@ -20,14 +21,6 @@ def get(tag):
     '''
     return Dog.query.get(tag)
 
-def getForHandlers():
-    '''
-    Get all entities
-    :returns: all entity
-    '''
-    eligible_dogs = DogStatus.query.filter(or_(DogStatus.status=="CAPTURED", DogStatus.status=="FIT_FOR_RELEASE")).all()
-    return eligible_dogs
-
 def post(body):
     '''
     Create entity with body
@@ -36,7 +29,6 @@ def post(body):
     '''
     dog = Dog(**body)
     db.session.add(dog)
-    db.session.commit()
     return dog
 
 def put(body):
@@ -50,7 +42,6 @@ def put(body):
         dog = Dog(**body)
         db.session.merge(dog)
         db.session.flush()
-        db.session.commit()
         return dog
     raise NotFound('no such entity found with id=' + str(body['id']))
 
@@ -63,7 +54,6 @@ def delete(id):
     dog = Dog.query.get(id)
     if dog:
         db.session.delete(dog)
-        db.session.commit()
         return {'success': True}
     raise NotFound('no such entity found with id=' + str(id))
 

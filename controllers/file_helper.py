@@ -12,10 +12,10 @@ def upload_file(original_fname, new_fname, user_id, category):
     if not f:
         raise KeyError("No image with name "+original_fname)
     filename = new_fname + "_" \
-        + user_id + "_" + str(int(datetime.now().timestamp()))\
+        + user_id + "_" + str(int(datetime.utcnow().timestamp()))\
             + "." + f.filename.rsplit('.', 1)[1].lower()
-    if category not in ["avatar", "pick_drop", "others"]:
+    if category not in ["avatar", "pick_drop", "action"]:
         raise ValueError("Unknown category")
     f.save(os.path.join(UPLOAD_FOLDER + category, secure_filename(filename)))
-    return secure_filename(filename)
+    return "photos/" + category + "/" + filename
     

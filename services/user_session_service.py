@@ -27,7 +27,6 @@ def post(body):
     '''
     user_session = UserSession(id=body['id'], user_id=body['user_id'], expire_timestamp=body['expire_timestamp'])
     db.session.add(user_session)
-    db.session.commit()
     return user_session
 
 def put(body):
@@ -41,7 +40,6 @@ def put(body):
         user_session = UserSession(**body)
         db.session.merge(user_session)
         db.session.flush()
-        db.session.commit()
         return user_session
     raise NotFound('no such entity found with id=' + str(body['id']))
 
@@ -56,7 +54,6 @@ def delete_user_sessions(user_id):
     if user_sessions:
         for user_session in user_sessions:
             db.session.delete(user_session)
-            db.session.commit()
             if user_session.id in session:
                 del session[user_session.id]
     return {'success': True}

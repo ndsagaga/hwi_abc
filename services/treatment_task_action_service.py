@@ -4,12 +4,12 @@ from models.treatment_task_action import TreatmentTaskAction
 from config import db
 from werkzeug.exceptions import NotFound
 
-def get():
+def getAll(treatment_task_id):
     '''
     Get all entities
     :returns: all entity
     '''
-    return TreatmentTaskAction.query.all()
+    return TreatmentTaskAction.query.filter_by(treatment_task_id=treatment_task_id).all()
 
 def post(body):
     '''
@@ -19,7 +19,6 @@ def post(body):
     '''
     treatment_task_action = TreatmentTaskAction(**body)
     db.session.add(treatment_task_action)
-    db.session.commit()
     return treatment_task_action
 
 def put(body):
@@ -33,7 +32,6 @@ def put(body):
         treatment_task_action = TreatmentTaskAction(**body)
         db.session.merge(treatment_task_action)
         db.session.flush()
-        db.session.commit()
         return treatment_task_action
     raise NotFound('no such entity found with id=' + str(body['id']))
 
@@ -46,7 +44,6 @@ def delete(id):
     treatment_task_action = TreatmentTaskAction.query.get(id)
     if treatment_task_action:
         db.session.delete(treatment_task_action)
-        db.session.commit()
         return {'success': True}
     raise NotFound('no such entity found with id=' + str(id))
 

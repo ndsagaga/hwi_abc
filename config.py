@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 import os
 import yaml
-from flask import Flask
+from flask import Flask, sessions
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 
 app = Flask(__name__)
 
+HOST_ADDRESS = "http://192.168.1.203:5000"
 config_obj = yaml.load(open('config.yaml'), Loader=yaml.Loader)
 
 # override the environment variables
@@ -19,3 +20,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
+
+
+class CustomSessionInterface(sessions.SecureCookieSessionInterface):
+    """Disable default cookie generation."""
+    def should_set_cookie(self, *args, **kwargs):
+        return False
+
+    """Prevent creating session from API requests."""
+    def save_session(self, *args, **kwargs):
+        return super(CustomSessionInterface, self).save_session(*args,
+                                                                **kwargs)
+
+app.session_interface = CustomSessionInterface()

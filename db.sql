@@ -81,26 +81,29 @@ CREATE TABLE `dog_status` (
 CREATE TABLE `treatment_tasks` (
 	`id` INT unsigned NOT NULL AUTO_INCREMENT,
 	`tag` VARCHAR(255) NOT NULL,
-	`frequency` VARCHAR(255) NOT NULL,
+	`frequency` VARCHAR(255),
 	`status` VARCHAR(255) NOT NULL,
 	`assigned_role` VARCHAR(255) NOT NULL,
-	`action` TEXT NOT NULL,
-	`is_completed` BOOLEAN NOT NULL DEFAULT false,
-	`is_active` BOOLEAN NOT NULL DEFAULT true,
+	`task` TEXT NOT NULL,
+	`is_completed` BOOLEAN DEFAULT false,
+	`is_active` BOOLEAN DEFAULT true,
 	`last_modified_timestamp` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`last_modified_by` int NOT NULL,
+	`last_modified_by` VARCHAR(255) NOT NULL,
 	PRIMARY KEY (`id`),
 	FOREIGN KEY (`tag`) REFERENCES dogs(`tag`),
 	FOREIGN KEY (`status`) REFERENCES statuses(`status`),
-	FOREIGN KEY (`assigned_role`) REFERENCES roles(`role`)
+	FOREIGN KEY (`assigned_role`) REFERENCES roles(`role`),
+	FOREIGN KEY (`last_modified_by`) REFERENCES users(`id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `treatment_task_actions` (
+	`id` INT unsigned NOT NULL AUTO_INCREMENT,
 	`treatment_task_id` INT unsigned NOT NULL,
 	`action_performed` TEXT NOT NULL,
 	`action_photo` VARCHAR(255),
 	`timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	`by` VARCHAR(255) NOT NULL,
+	PRIMARY KEY (`id`),
 	FOREIGN KEY (`treatment_task_id`) REFERENCES treatment_tasks(`id`),
 	FOREIGN KEY (`by`) REFERENCES users(`id`)
 ) ENGINE=InnoDB;
