@@ -43,11 +43,10 @@ CREATE TABLE `dogs` (
 	`tag` VARCHAR(255) NOT NULL,
 	`avatar` VARCHAR(255),
 	`gender` ENUM('M','F') NOT NULL,
-	`age` INT unsigned,
 	`age_category` VARCHAR(255),
 	`color` VARCHAR(255),
 	`weight` INT unsigned,
-	`breed` VARCHAR(255),
+	`additional_info` TEXT,
 	`pickup_lat` FLOAT NOT NULL,
 	`pickup_long` FLOAT NOT NULL,
 	`pickup_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -81,12 +80,12 @@ CREATE TABLE `dog_status` (
 CREATE TABLE `treatment_tasks` (
 	`id` INT unsigned NOT NULL AUTO_INCREMENT,
 	`tag` VARCHAR(255) NOT NULL,
-	`frequency` VARCHAR(255),
 	`status` VARCHAR(255) NOT NULL,
 	`assigned_role` VARCHAR(255) NOT NULL,
 	`task` TEXT NOT NULL,
+	`response_type` ENUM('TEXT','BINARY','COUNTER','TIMESTAMP','GEO_PHOTO') NOT NULL,
 	`is_completed` BOOLEAN DEFAULT false,
-	`is_active` BOOLEAN DEFAULT true,
+	`is_required` BOOLEAN DEFAULT true,
 	`last_modified_timestamp` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`last_modified_by` VARCHAR(255) NOT NULL,
 	PRIMARY KEY (`id`),
@@ -96,14 +95,13 @@ CREATE TABLE `treatment_tasks` (
 	FOREIGN KEY (`last_modified_by`) REFERENCES users(`id`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE `treatment_task_actions` (
-	`id` INT unsigned NOT NULL AUTO_INCREMENT,
+CREATE TABLE `treatment_task_actions` (\
 	`treatment_task_id` INT unsigned NOT NULL,
 	`action_performed` TEXT NOT NULL,
 	`action_photo` VARCHAR(255),
 	`timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	`by` VARCHAR(255) NOT NULL,
-	PRIMARY KEY (`id`),
+	PRIMARY KEY (`treatment_task_id`),
 	FOREIGN KEY (`treatment_task_id`) REFERENCES treatment_tasks(`id`),
 	FOREIGN KEY (`by`) REFERENCES users(`id`)
 ) ENGINE=InnoDB;
@@ -127,8 +125,7 @@ INSERT INTO users VALUES
 
 INSERT INTO statuses VALUES
 	("CAPTURED", 0.0, "Captured for spaying/neutering", 1),
-	("FIT_FOR_SURGERY", 1.0, "Certified fit for surgery", 2),
+	("PRE_SURGERY", 1.0, "Certified fit for surgery", 2),
 	("IN_SURGERY", 2.0, "Undergoing surgery", 2),
 	("POST_SURGERY", 3.0, "Post-op treatments", 3),
-	("FIT_FOR_RELEASE", 4.0, "Certified fit for release", 1),
-	("RELEASED", 5.0, "Dog has been released", 999);
+	("RELEASED", 4.0, "Dog has been released", 999);

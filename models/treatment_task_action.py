@@ -9,8 +9,7 @@ class TreatmentTaskAction(db.Model):
     ''' The data model'''
     # table name
     __tablename__ = 'treatment_task_actions'
-    id = db.Column(db.Integer(), primary_key=True, auto_increment=True)
-    treatment_task_id = db.Column(db.Integer(), db.ForeignKey("treatment_tasks.id"))
+    treatment_task_id = db.Column(db.Integer(), db.ForeignKey("treatment_tasks.id"), primary_key=True)
     action_performed = db.Column(db.Text())
     action_photo = db.Column(db.String(255), nullable=True)
     timestamp = db.Column(db.DateTime(), nullable=False)

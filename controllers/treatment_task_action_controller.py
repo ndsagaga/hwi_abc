@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from datetime import datetime
 from os import stat
-from controllers.errors import AuthError, BadRequestError, ForbiddenError
+from controllers.errors import AuthError, BadRequestError, ForbiddenError, InternalError
 from flask import Blueprint, jsonify, request, Response
 from flask.globals import session
 import services.dog_status_service as dog_status_service
@@ -50,8 +50,6 @@ def api_create_task_action():
     
     if treatment_task.is_completed:
         raise BadRequestError("Treatment task has already been completed.")
-    if not treatment_task.is_active:
-        raise BadRequestError("Treatment task is inactive.")
         
     role = role_service.get(treatment_task.assigned_role)
     if not role:
@@ -64,12 +62,30 @@ def api_create_task_action():
     if "action_photo" in request.files:
         action_photo = file_helper.upload_file('action_photo', treatment_task.tag, user["id"], "action")
 
-    treatment_task_action = treatment_task_action_service.post({
-        "treatment_task_id": request.form["treatment_task_id"], 
-        "action_performed": request.form["action_performed"], 
-        "action_photo": action_photo, 
-        "timestamp": datetime.utcnow(), 
-        "by": user["id"]})
+    treatment_task = treatment_task_service.put({
+        "id": request.form["treatment_task_id"],
+        "is_completed": True,
+        "last_modified_timestamp": datetime.utcnow(), 
+        "last_modified_by": user["id"],
+    })
+
+    if not treatment_task:
+        raise InternalError("Cannot save treatment task")
+
+    if not treatment_task_action_service.get(request.form["treatment_task_id"]):
+        treatment_task_action = treatment_task_action_service.post({
+            "treatment_task_id": request.form["treatment_task_id"], 
+            "action_performed": request.form["action_performed"], 
+            "action_photo": action_photo, 
+            "timestamp": datetime.utcnow(), 
+            "by": user["id"]})
+    else:
+        treatment_task_action = treatment_task_action_service.put({
+            "treatment_task_id": request.form["treatment_task_id"], 
+            "action_performed": request.form["action_performed"], 
+            "action_photo": action_photo, 
+            "timestamp": datetime.utcnow(), 
+            "by": user["id"]})
 
     if  treatment_task_action.action_photo:
         treatment_task_action.action_photo = request.host_url + treatment_task_action.action_photo

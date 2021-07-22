@@ -4,6 +4,13 @@ from models.treatment_task_action import TreatmentTaskAction
 from config import db
 from werkzeug.exceptions import NotFound
 
+def get(treatment_task_id):
+    '''
+    Get all entities
+    :returns: all entity
+    '''
+    return TreatmentTaskAction.query.get(treatment_task_id)
+
 def getAll(treatment_task_id):
     '''
     Get all entities
@@ -27,13 +34,13 @@ def put(body):
     :param body: request body
     :returns: the updated entity
     '''
-    treatment_task_action = TreatmentTaskAction.query.get(body['id'])
+    treatment_task_action = TreatmentTaskAction.query.get(body['treatment_task_id'])
     if treatment_task_action:
         treatment_task_action = TreatmentTaskAction(**body)
         db.session.merge(treatment_task_action)
         db.session.flush()
         return treatment_task_action
-    raise NotFound('no such entity found with id=' + str(body['id']))
+    raise NotFound('no such entity found with id=' + str(body['treatment_task_id']))
 
 def delete(id):
     '''

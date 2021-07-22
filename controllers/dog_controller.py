@@ -36,8 +36,8 @@ def api_list_dogs():
             continue
         dog_dict["status_history"] = status_dict[dog_dict["tag"]]
 
-        if dog_dict["avatar"]:
-            dog_dict["avatar"] = request.host_url + dog_dict["avatar"]
+        if dog_dict["pickup_photo"]:
+            dog_dict["pickup_photo"] = request.host_url + dog_dict["pickup_photo"]
         filtered_dog_dicts.append(dog_dict)
 
     return jsonify(filtered_dog_dicts)
@@ -47,8 +47,12 @@ def api_create_dog():
     auth_helper.verify_auth(role_level=3.0)
     user = session['user']
 
-    if not all(attr in request.form for attr in ["tag", "gender", "age", "age_category", "color", "pickup_lat", "pickup_long", "pickup_time"]):
-        raise ValueError("Missing attributes")
+    if not all(attr in request.form for attr in ["tag", "gender", "age_category", "color", "pickup_lat", "pickup_long", "pickup_time"]):
+        raise BadRequestError("Missing attributes")
+
+    dog = dog_service.get(request.form["tag"])
+    if dog:
+        raise BadRequestError("Tag already exists")
 
     new_dog = dict()
     new_dog["tag"] = request.form["tag"]
@@ -56,7 +60,6 @@ def api_create_dog():
     if "avatar" in request.files:
         new_dog["avatar"] = file_helper.upload_file('avatar', new_dog["tag"], user["id"], "avatar")
     new_dog["gender"] = request.form["gender"]
-    new_dog["age"] = request.form["age"]
     new_dog["age_category"] = request.form["age_category"]
     new_dog["color"] = request.form["color"]
     if "weight" in request.form:
@@ -78,33 +81,33 @@ def api_create_dog():
         new_dog["avatar"] = request.host_url + new_dog["avatar"]
 
     dog_status_service.post({"tag": new_dog["tag"], "status": "CAPTURED", "timestamp": datetime.utcnow(), "by": user["id"]})
-    dog_status_controller._create_captured_tasks(new_dog["tag"])
     db.session.commit()
     return jsonify(new_dog)
 
 @api.route('/dog/edit', methods=['POST'])
 def api_edit_dog():
     auth_helper.verify_auth(role_level=2.0)
+    print(request.files)
     user = session['user']
     if "tag" not in request.form:
-        raise ValueError("Need dog tag")
+        raise BadRequestError("Need dog tag")
     dog = dog_service.get(request.form["tag"])
     if not dog:
-        raise ValueError("Invalid tag")
+        raise BadRequestError("Invalid tag")
     
     new_dog = dog.as_dict()
-    for attr in ["gender", "age", "age_category", "color", "weight", "breed", "is_vaccinated", "is_sterlized"]:
+    for attr in ["gender", "age_category", "color", "weight", "additional_info", "pickup_photo"]:
         if attr in request.form:
             new_dog[attr] = request.form[attr]
     
-    if "avatar" in request.files:
-        new_dog["avatar"] = file_helper.upload_file('avatar', new_dog["tag"], user["id"], "avatar")
+    if "pickup_photo" in request.files:
+        new_dog["pickup_photo"] = file_helper.upload_file('pickup_photo', new_dog["tag"], user["id"], "pick_drop")
     
     new_dog["last_modified_timestamp"] = datetime.utcnow()
 
     new_dog = dog_service.put(new_dog)
     new_dog = new_dog.as_dict()
-    new_dog["avatar"] = request.host_url + new_dog["avatar"]
+    new_dog["pickup_photo"] = request.host_url + new_dog["pickup_photo"]
 
     db.session.commit()
     return jsonify(new_dog)

@@ -3,6 +3,7 @@ from controllers.errors import AuthError, BadRequestError, ForbiddenError
 from flask import Blueprint, jsonify, request, Response
 from flask.globals import session
 import services.dog_status_service as dog_status_service
+import services.dog_service as dog_service
 import services.treatment_task_service as treatment_task_service
 import services.status_service as status_service
 from werkzeug.exceptions import HTTPException
@@ -26,12 +27,17 @@ def api_get_dog_status(tag):
 def api_create_dog_status():
     auth_helper.verify_auth()
     user = session['user']
+    print(request.form)
 
     if not all(x in request.form for x in ["tag", "status"]):
         raise BadRequestError("Missing attributes")
 
     if request.form["status"] != "RELEASED" and user["role_level"] >= 3:
         raise ForbiddenError("Unauthorized to change status")
+
+    dog = dog_service.get(request.form["tag"])
+    if not dog:
+        raise BadRequestError("Dog does not exist")
 
     dog_status = dog_status_service.getCurrentStatusForDog(request.form["tag"])
     if not dog_status:
@@ -49,108 +55,208 @@ def api_create_dog_status():
     
     
     new_dog_status = dog_status_service.post({"tag": request.form["tag"], "status": request.form["status"], "timestamp": datetime.utcnow(), "by": user["id"]})
-    if new_dog_status.status == "FIT_FOR_SURGERY":
-        _created_ffs_tasks(request.form["tag"])
+    if new_dog_status.status == "PRE_SURGERY":
+        _created_pre_tasks(request.form["tag"], dog.weight)
     elif new_dog_status.status == "IN_SURGERY":
-        _created_in_surgery_tasks(request.form["tag"])
+        _created_in_surgery_tasks(request.form["tag"], dog.weight)
     elif new_dog_status.status == "POST_SURGERY":
         _created_post_surgery_tasks(request.form["tag"])
     
     db.session.commit()
     return jsonify(new_dog_status.as_dict())
 
-def _create_captured_tasks(tag):
-    tasks = {
-        "Notes about dog pick-up location.": "HANDLER", 
-        "Record body temperature.": "SUPERVISOR", 
-        "Record any external external wounds/bruises.": "SUPERVISOR", 
-        "Additional notes for doctor.": "SUPERVISOR", 
-        "Sign off on status change.": "DOCTOR"
-        }
-    for task, role in tasks.items():
-        treatment_task = treatment_task_service.post({
-            "tag": tag, 
-            "status": "CAPTURED", 
-            "assigned_role": role, 
-            "task": task, 
-            "last_modified_timestamp": datetime.utcnow(), 
-            "last_modified_by": "nirup",
-            "is_active": True})
-        if not treatment_task:
-            return False
-    
-    return True
 
-def _created_in_surgery_tasks(tag):
-    tasks = {
-        "Administer Xylazine.": "DOCTOR", 
-        "Administer Atropine Sulphate.": "DOCTOR", 
-        "Administer Thiosol.": "DOCTOR", 
-        "Administer Ketamine.": "DOCTOR", 
-        "Administer Ivermectin.": "DOCTOR", 
-        "Administer Meloxicam.": "DOCTOR", 
-        "Administer Vitamin.": "DOCTOR", 
-        "Administer Penicillin.": "DOCTOR", 
-        "Administer Diazepam.": "DOCTOR", 
-        "Administer Cefotaxime.": "DOCTOR", 
-        "Additional notes.": "SUPERVISOR", 
-        "Sign off on status change.": "DOCTOR"
+def _created_in_surgery_tasks(tag,  weight):
+    tasks = [
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Attending doctor's name",
+            "response_type": "TEXT",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Surgery start time",
+            "response_type": "TIMESTAMP",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Cefluiaxone " + _getDosage("cefluiaxone", weight) + " topups",
+            "response_type": "COUNTER",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Surgery end time",
+            "response_type": "TIMESTAMP",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Additional notes",
+            "response_type": "TEXT",
+            "is_required": False
         }
-    for task, role in tasks.items():
+    ]
+    for task in tasks:
         treatment_task = treatment_task_service.post({
             "tag": tag, 
             "status": "IN_SURGERY", 
-            "assigned_role": role, 
-            "task": task, 
+            "assigned_role": task["assigned_role"], 
+            "task": task["task"], 
             "last_modified_timestamp": datetime.utcnow(), 
             "last_modified_by": "nirup",
-            "is_active": True})
+            "is_required": task["is_required"],
+            "response_type": task["response_type"]})
         if not treatment_task:
             return False
     
     return True
 
 def _created_post_surgery_tasks(tag):
-    tasks = {
-        "Record body temperature twice a day.": "SUPERVISOR", 
-        "Record incision condition. Add photos.": "SUPERVISOR", 
-        "Additional notes.": "SUPERVISOR", 
-        "Sign off on status change.": "DOCTOR"
+    tasks = [
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Additional notes",
+            "response_type": "TEXT",
+            "is_required": False
         }
-    for task, role in tasks.items():
+    ]
+    for task in tasks:
         treatment_task = treatment_task_service.post({
             "tag": tag, 
             "status": "POST_SURGERY", 
-            "assigned_role": role, 
-            "task": task, 
+            "assigned_role": task["assigned_role"], 
+            "task": task["task"], 
             "last_modified_timestamp": datetime.utcnow(), 
             "last_modified_by": "nirup",
-            "is_active": True})
+            "is_required": task["is_required"],
+            "response_type": task["response_type"]})
         if not treatment_task:
             return False
     
     return True
 
-def _created_ffs_tasks(tag):
-    tasks = {
-        "Shave surgery site.": "HANDLER", 
-        "Ensure mouth guard and other safety harnesses are put on the dog.": "HANDLER", 
-        "Sign off on status change.": "DOCTOR"
+def _created_pre_tasks(tag, weight):
+    if not weight:
+        raise BadRequestError("Dog needs to have a weight set.")
+    tasks = [
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Apply eye ointment",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Cut ear for identification",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Shave & sterlize surgery site",
+            "response_type": "BINARY",
+            "is_required": True 
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Empty the dog's bladder",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("xylozine", weight) + " of Xylozine",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        { 
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("ketamine", weight) + " of Ketamine",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("meloxicam", weight) + " of Meloxicam",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("ivermectin", weight) + " of Ivermectin",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("penicillin", weight) + " of Penicillin",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("betamyl", weight) + " of Betamyl",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("atropine", weight) + " of Atropine Sulphate",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        { 
+            "assigned_role": "SUPERVISOR",
+            "task": "Administer " + _getDosage("diazepam", weight) + " of Diazepam",
+            "response_type": "BINARY",
+            "is_required": True
         }
-    for task, role in tasks.items():
+    ]
+    for task in tasks:
         treatment_task = treatment_task_service.post({
             "tag": tag, 
-            "status": "POST_SURGERY", 
-            "assigned_role": role, 
-            "task": task, 
+            "status": "PRE_SURGERY", 
+            "assigned_role": task["assigned_role"], 
+            "task": task["task"], 
             "last_modified_timestamp": datetime.utcnow(), 
             "last_modified_by": "nirup",
-            "is_active": True})
+            "is_required": task["is_required"],
+            "response_type": task["response_type"]})
         if not treatment_task:
             return False
     
     return True
 
+def _getDosage(medicine, weight): 
+    if medicine == "xylozine":
+        if weight < 10:
+            return str(weight/10) + " ml"
+        elif weight <= 20:
+            return "1 ml"
+        elif weight < 30:
+            return "1." + str((weight-20)/10) + " ml"
+        else:
+            return "2 ml"
+    elif medicine == "ketamine":
+        return str(0.2 * weight) + " ml"
+    elif medicine == "meloxicam":
+        return str(0.4 * weight) + " ml"
+    elif medicine == "ivermectin":
+        return str(0.3 * weight) + " ml"
+    elif medicine == "penicillin":
+        return str(0.4 * weight) + " ml"
+    elif medicine == "betamyl":
+        return str(0.3 * weight) + " ml"
+    elif medicine == "diazepam":
+        return str(0.05 * weight) + " ml"
+    elif medicine == "atropine":
+        return str(0.832 * weight) + " ml"
+    elif medicine == "cefluiaxone":
+        return str(0.1 * weight) + " ml"
+    return "X ml"
 
 @api.errorhandler(AuthError)
 @api.errorhandler(ForbiddenError)
