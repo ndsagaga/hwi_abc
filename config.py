@@ -4,9 +4,24 @@ import yaml
 from flask import Flask, sessions
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask.json import JSONEncoder
+from datetime import date
 
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        try:
+            if isinstance(obj, date):
+                return obj.isoformat() + 'Z'
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
 
 app = Flask(__name__)
+app.json_encoder = CustomJSONEncoder
 
 HOST_ADDRESS = "http://192.168.1.203:5000"
 config_obj = yaml.load(open('config.yaml'), Loader=yaml.Loader)

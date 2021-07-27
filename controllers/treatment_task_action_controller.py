@@ -27,6 +27,106 @@ def api_get_task_action(treatment_task_id):
         enriched_treatment_task_actions.append(treatment_task_action)
     return jsonify(enriched_treatment_task_actions)
 
+@api.route('/treatment_task_actions', methods=['POST'])
+def api_create_task_actions():
+    auth_helper.verify_auth(3)
+    user = session['user']
+    seperator = ";;;"
+    
+    # request contains:
+    # task_ids = a,b,c,d
+    # actions = w,x,y
+    # action_photos = z
+    # len(task_ids) = len(actions) + len(action_photos) in that order
+
+    if not all(attr in request.form for attr in ["task_ids"]):
+        raise BadRequestError("Task IDs not set")
+
+    task_ids = request.form.getlist("task_ids")
+    actions_performed = None
+    if "actions_performed" in request.form:
+        actions_performed = request.form.getlist("actions_performed")
+    actions_photos = None
+    if "actions_photos" in request.files:
+        actions_photos = request.files.getlist("actions_photos")
+
+
+    print(task_ids)
+    print(actions_performed)
+    print(actions_photos)
+
+    if not (task_ids and isinstance(task_ids, list)):
+        raise BadRequestError("No task IDs sent")
+    if not (actions_performed and isinstance(actions_performed, list)) and not (actions_photos and isinstance(actions_photos, list)):
+        raise BadRequestError("No responses provided for tasks")
+    if not (actions_performed and isinstance(actions_performed, list)):
+        actions_performed = []
+    if not (actions_photos and isinstance(actions_photos, list)):
+        actions_photos = []
+    
+    if len(actions_performed) + len(actions_photos) != len(task_ids):
+        raise BadRequestError("Task IDs and responses dont match")
+
+    for i in range(len(task_ids)):
+        task_id = task_ids[i]
+        treatment_task = treatment_task_service.get(task_id)
+        if not treatment_task:
+            raise BadRequestError("Invalid treatment task ID")
+
+        dog_status = dog_status_service.getCurrentStatusForDog(treatment_task.tag)
+        if not dog_status:
+            raise BadRequestError("Cannot find dog status")
+        elif dog_status.status != treatment_task.status:
+            raise BadRequestError("Treatment task is not currently active. Dog is in a different status.")
+        
+        if treatment_task.is_completed:
+            raise BadRequestError("Treatment task has already been completed.")
+            
+        role = role_service.get(treatment_task.assigned_role)
+        if not role:
+            raise BadRequestError("Invalid role")
+        
+        if user["role_level"] > role.level:
+            raise Forbidden("Not authorized to act on this task")
+            
+        
+        if i < len(actions_performed):
+             payload = {
+                "treatment_task_id": task_id, 
+                "action_performed": actions_performed[i], 
+                "timestamp": datetime.utcnow(), 
+                "by": user["id"]
+                }
+        else:
+             payload = {
+                "treatment_task_id": task_id, 
+                "action_photo": file_helper.upload_provided_file(actions_photos[i-len(actions_performed)], treatment_task.tag, user["id"], "action"), 
+                "timestamp": datetime.utcnow(), 
+                "by": user["id"]
+                }
+        treatment_task = treatment_task_service.put({
+            "id": task_id,
+            "is_completed": True,
+            "last_modified_timestamp": datetime.utcnow(), 
+            "last_modified_by": user["id"],
+        })
+
+        if not treatment_task:
+            raise InternalError("Cannot save treatment task")
+
+        if not treatment_task_action_service.get(task_id):
+            treatment_task_action = treatment_task_action_service.post(payload)
+        else:
+            treatment_task_action = treatment_task_action_service.put(payload)
+        
+        if not treatment_task_action:
+            raise InternalError("Cannot save treatment task action")
+        
+        
+
+    db.session.commit()   
+    return {"success": True}
+
 @api.route('/treatment_task_action', methods=['POST'])
 def api_create_task_action():
     auth_helper.verify_auth(3)

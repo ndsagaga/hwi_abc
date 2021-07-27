@@ -19,7 +19,6 @@ def post(body):
     '''
     role = Role(**body)
     db.session.add(role)
-    db.session.commit()
     return role
 
 def put(body):
@@ -33,7 +32,6 @@ def put(body):
         role = Role(**body)
         db.session.merge(role)
         db.session.flush()
-        db.session.commit()
         return role
     raise NotFound('no such entity found with id=' + str(body['id']))
 
@@ -46,7 +44,6 @@ def delete(id):
     role = Role.query.get(id)
     if role:
         db.session.delete(role)
-        db.session.commit()
         return {'success': True}
     raise NotFound('no such entity found with id=' + str(id))
 

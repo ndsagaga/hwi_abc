@@ -27,7 +27,6 @@ def api_get_dog_status(tag):
 def api_create_dog_status():
     auth_helper.verify_auth()
     user = session['user']
-    print(request.form)
 
     if not all(x in request.form for x in ["tag", "status"]):
         raise BadRequestError("Missing attributes")
@@ -64,6 +63,54 @@ def api_create_dog_status():
     
     db.session.commit()
     return jsonify(new_dog_status.as_dict())
+
+@api.route('/dog_status/release', methods=['POST'])
+def api_create_dog_status_release():
+    auth_helper.verify_auth()
+    user = session['user']
+    print(request.form)
+
+    if not all(x in request.form for x in ["tag", "dropoff_lat", "dropoff_long"]):
+        raise BadRequestError("Missing attributes")
+
+    if user["role_level"] >= 3:
+        raise ForbiddenError("Unauthorized to change status")
+
+    dog = dog_service.get(request.form["tag"])
+    if not dog:
+        raise BadRequestError("Dog does not exist")
+
+    dog_status = dog_status_service.getCurrentStatusForDog(request.form["tag"])
+    if not dog_status:
+        raise BadRequestError("Dog does not have a previous status")
+    old_dog_status = status_service.get(dog_status.status)
+    new_dog_status = status_service.get("RELEASED")
+    if new_dog_status.order - old_dog_status.order != 1:
+        raise BadRequestError("Can only move by one step.")
+    
+    treatment_tasks = treatment_task_service.getForDogAndStatus(request.form["tag"], old_dog_status.status)
+    if treatment_tasks:
+        for treatment_task in treatment_tasks:
+            if not treatment_task.is_completed:
+                raise BadRequestError("There are incomplete tasks in current status.")
+    
+    if "dropoff_photo" not in request.files:
+        raise BadRequestError("No photo attached")
+
+    dropoff_photo = file_helper.upload_file('dropoff_photo', dog.tag, user["id"], "pick_drop")
+    
+    new_dog_status = dog_status_service.post({"tag": request.form["tag"], "status": "RELEASED", "timestamp": datetime.utcnow(), "by": user["id"]})
+    dog_updated = dog_service.put({"tag": request.form["tag"], 
+                "last_modified_timestamp": datetime.utcnow(), 
+                "dropoff_lat": request.form["dropoff_lat"],
+                "dropoff_long": request.form["dropoff_long"],
+                "dropoff_time": datetime.utcnow(),
+                "dropoff_by": user['id'],
+                "dropoff_photo": dropoff_photo
+                })
+    
+    db.session.commit()
+    return jsonify({})
 
 
 def _created_in_surgery_tasks(tag,  weight):

@@ -38,6 +38,7 @@ def api_list_dogs():
 
         if dog_dict["pickup_photo"]:
             dog_dict["pickup_photo"] = request.host_url + dog_dict["pickup_photo"]
+        dog_dict["time"] = datetime.utcnow()
         filtered_dog_dicts.append(dog_dict)
 
     return jsonify(filtered_dog_dicts)
