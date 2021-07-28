@@ -129,7 +129,13 @@ def _created_in_surgery_tasks(tag,  weight):
         },
         {
             "assigned_role": "SUPERVISOR",
-            "task": "Ceftriaxone " + _getDosage("ceftriaxone", weight) + " topups",
+            "task": "Administer " + _getDosage("ceftriaxone", weight) + " of Ceftriaxone",
+            "response_type": "BINARY",
+            "is_required": True
+        },
+        {
+            "assigned_role": "SUPERVISOR",
+            "task": "Topups",
             "response_type": "COUNTER",
             "is_required": True
         },
