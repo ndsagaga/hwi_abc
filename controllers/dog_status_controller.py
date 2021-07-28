@@ -233,7 +233,7 @@ def _created_pre_tasks(tag, weight):
         },
         {
             "assigned_role": "SUPERVISOR",
-            "task": "Administer " + _getDosage("meloxicam", weight) + " of Meloxicam",
+            "task": "Administer " + _getDosage("melonex", weight) + " of Melonex",
             "response_type": "BINARY",
             "is_required": True
         },
@@ -251,7 +251,7 @@ def _created_pre_tasks(tag, weight):
         },
         {
             "assigned_role": "SUPERVISOR",
-            "task": "Administer " + _getDosage("betamyl", weight) + " of Betamyl",
+            "task": "Administer " + _getDosage("belamyl", weight) + " of Belamyl",
             "response_type": "BINARY",
             "is_required": True
         },
@@ -295,14 +295,14 @@ def _getDosage(medicine, weight):
             return "2 ml"
     elif medicine == "ketamine":
         return str(0.2 * weight) + " ml"
-    elif medicine == "meloxicam":
-        return str(0.4 * weight) + " ml"
+    elif medicine == "melonex":
+        return str(0.04 * weight) + " ml"
     elif medicine == "ivermectin":
-        return str(0.3 * weight) + " ml"
+        return str(0.03 * weight) + " ml"
     elif medicine == "penicillin":
         return str(0.2 * weight) + " ml"
-    elif medicine == "betamyl":
-        return str(0.3 * weight) + " ml"
+    elif medicine == "belamyl":
+        return str(0.03 * weight) + " ml"
     elif medicine == "diazepam":
         return str(0.05 * weight) + " ml"
     elif medicine == "atropine":
