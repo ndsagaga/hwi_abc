@@ -129,7 +129,7 @@ def _created_in_surgery_tasks(tag,  weight):
         },
         {
             "assigned_role": "SUPERVISOR",
-            "task": "Cefluiaxone " + _getDosage("cefluiaxone", weight) + " topups",
+            "task": "Ceftriaxone " + _getDosage("ceftriaxone", weight) + " topups",
             "response_type": "COUNTER",
             "is_required": True
         },
@@ -294,14 +294,14 @@ def _getDosage(medicine, weight):
     elif medicine == "ivermectin":
         return str(0.3 * weight) + " ml"
     elif medicine == "penicillin":
-        return str(0.4 * weight) + " ml"
+        return str(0.2 * weight) + " ml"
     elif medicine == "betamyl":
         return str(0.3 * weight) + " ml"
     elif medicine == "diazepam":
         return str(0.05 * weight) + " ml"
     elif medicine == "atropine":
-        return str(0.832 * weight) + " ml"
-    elif medicine == "cefluiaxone":
+        return str(0.0832 * weight) + " ml"
+    elif medicine == "ceftriaxone":
         return str(0.1 * weight) + " ml"
     return "X ml"
 

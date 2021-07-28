@@ -95,7 +95,7 @@ CREATE TABLE `treatment_tasks` (
 	FOREIGN KEY (`last_modified_by`) REFERENCES users(`id`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE `treatment_task_actions` (\
+CREATE TABLE `treatment_task_actions` (
 	`treatment_task_id` INT unsigned NOT NULL,
 	`action_performed` TEXT NOT NULL,
 	`action_photo` VARCHAR(255),
@@ -129,3 +129,10 @@ INSERT INTO statuses VALUES
 	("IN_SURGERY", 2.0, "Undergoing surgery", 2),
 	("POST_SURGERY", 3.0, "Post-op treatments", 3),
 	("RELEASED", 4.0, "Dog has been released", 999);
+
+INSERT INTO users VALUES("nikitha", "Nikitha", "Iyer", "F","9663311681", "nikki.mitra@gmail.com", "ADMIN","22f397847ee022e224d095a1e21c0ca502de41f2d88e90dd912d8476ee669b81ee546408a3fd1200d272829bcdb93d87978761dbe5b3dbf0c4b715d7a9e4963f", 1);
+INSERT INTO users VALUES
+("sandeep", "Sandeep", "Handler", "M","-", "", "HANDLER","54fe80df908b8883bc7a3794ae4ce0db482bd2197ed0197cc5761a49c7d35f6ee2924e88ad2b188c0179adbb2252123f1e186691ba3d22d41f3423621738df30", 1),
+("lakhinath", "Lakhinath", "Handler", "M","-", "", "HANDLER","69e613b26c3bc0e6dc4ff5a68917307ab10950ffa7ca662e11218cd51f5fefafaabbebd885ed7084cf97de1653bcc2ae19ad1cdee22b27692c7ec263333d0a7a", 1),
+("biswa", "Biswa", "Handler", "M","-", "", "HANDLER","f293e74b540662f053cf6d8285302732b5dc2818dafa6797eb68109d247aae2c236d6de4ff9d47297f5980450fd75a97f6aef0e1f8d4d9f872622cb623a14c19", 1),
+("bitupon", "Bitupon", "Handler", "M","-", "", "HANDLER","5196ff0cbaf6ae0c9aa9625f447579e957b114df7f2c7e7890ece215e37e8711ab597ec9572ff0801d1a60793c2bf2b6d2104a06a523eb04db1418e3c01d5199", 1);
