@@ -34,6 +34,7 @@ class Dog(db.Model):
     dropoff_photo = db.Column(db.String(255), nullable=False)
     created_timestamp = db.Column(db.DateTime(), nullable=False)
     last_modified_timestamp = db.Column(db.DateTime(), nullable=False)
+    is_active = db.Column(db.Boolean(), default=True)
     statuses = relationship("DogStatus", back_populates="dog")
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

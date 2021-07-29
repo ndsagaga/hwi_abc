@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from flask.wrappers import Response
-from controllers.errors import AuthError, BadRequestError, ForbiddenError
+from controllers.errors import AuthError, BadRequestError, ForbiddenError, InternalError
 from flask import Blueprint, jsonify, request
 from flask.globals import session
 import services.dog_service as dog_service
@@ -112,6 +112,26 @@ def api_edit_dog():
 
     db.session.commit()
     return jsonify(new_dog)
+
+
+@api.route('/dog/deactivate', methods=['POST'])
+def api_deactivate_dog():
+    auth_helper.verify_auth(role_level=3.0)
+    user = session['user']
+
+    if 'tag' not in request.form or request.form["tag"] == "":
+        raise BadRequestError("No tag set in request")
+    
+    dog = dog_service.put({
+        "tag": request.form['tag'],
+        "is_active": False
+    })
+
+    if not dog:
+        raise InternalError("Could not deactivate dog. Already deactive?")
+    
+    db.session.commit()
+    return jsonify(dog.as_dict())
 
 
 @api.errorhandler(AuthError)

@@ -54,13 +54,12 @@ CREATE TABLE `dogs` (
 	`pickup_photo` VARCHAR(255) NOT NULL,
 	`dropoff_lat` FLOAT,
 	`dropoff_long` FLOAT,
-	`dropoff_time` TIMESTAMP,
+	`dropoff_time` TIMESTAMP NULL,
 	`dropoff_by` VARCHAR(255),
 	`dropoff_photo` VARCHAR(255),
-	`is_vaccinated` BOOLEAN,
-	`is_sterlized` BOOLEAN,
 	`created_timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	`last_modified_timestamp` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`is_active` BOOLEAN DEFAULT false,
 	FOREIGN KEY (`pickup_by`) REFERENCES users(`id`),
 	FOREIGN KEY (`dropoff_by`) REFERENCES users(`id`),
 	PRIMARY KEY (`tag`)
@@ -136,3 +135,16 @@ INSERT INTO users VALUES
 ("lakhinath", "Lakhinath", "Handler", "M","-", "", "HANDLER","69e613b26c3bc0e6dc4ff5a68917307ab10950ffa7ca662e11218cd51f5fefafaabbebd885ed7084cf97de1653bcc2ae19ad1cdee22b27692c7ec263333d0a7a", 1),
 ("biswa", "Biswa", "Handler", "M","-", "", "HANDLER","f293e74b540662f053cf6d8285302732b5dc2818dafa6797eb68109d247aae2c236d6de4ff9d47297f5980450fd75a97f6aef0e1f8d4d9f872622cb623a14c19", 1),
 ("bitupon", "Bitupon", "Handler", "M","-", "", "HANDLER","5196ff0cbaf6ae0c9aa9625f447579e957b114df7f2c7e7890ece215e37e8711ab597ec9572ff0801d1a60793c2bf2b6d2104a06a523eb04db1418e3c01d5199", 1);
+
+
+INSERT INTO dogs VALUES
+("K17", NULL, "M", "Senior", "White, Brown", 18, NULL, 12.1, 34.2, '2021-07-27T09:00:00', 'nikitha', 'photos/pick_drop/K17.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-07-27T09:00:00', '2021-07-27T09:00:00'),
+("K18", NULL, "M", "Young", "Tan", 12, NULL, 12.1, 34.2, '2021-07-27T09:00:00', 'nikitha', 'photos/pick_drop/K18.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-07-27T09:00:00', '2021-07-27T09:00:00'),
+("K19", NULL, "F", "Adult", "Black, White, Brown", 12, NULL, 12.1, 34.2, '2021-07-27T09:00:00', 'nikitha', 'photos/pick_drop/K19.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-07-27T09:00:00', '2021-07-27T09:00:00'),
+("K20", NULL, "M", "Adult", "White, Brown", 15, NULL, 12.1, 34.2, '2021-07-27T09:00:00', 'nikitha', 'photos/pick_drop/K20.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-07-27T09:00:00', '2021-07-27T09:00:00'),
+("K21", NULL, "F", "Senior", "Black", 15, NULL, 12.1, 34.2, '2021-07-27T09:00:00', 'nikitha', 'photos/pick_drop/K21.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-07-27T09:00:00', '2021-07-27T09:00:00'),
+("K22", NULL, "F", "Adult", "White, Black", 15, NULL, 12.1, 34.2, '2021-07-27T09:00:00', 'nikitha', 'photos/pick_drop/K22.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-07-27T09:00:00', '2021-07-27T09:00:00'),
+("K23", NULL, "M", "Pup", "Black", 5, NULL, 12.1, 34.2, '2021-07-27T09:00:00', 'nikitha', 'photos/pick_drop/K23.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-07-27T09:00:00', '2021-07-27T09:00:00');
+
+
+K18 wrong loc

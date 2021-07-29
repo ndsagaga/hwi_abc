@@ -7,11 +7,13 @@ from sqlalchemy import or_
 from models.dog_status import DogStatus
 from . import dog_status_service
 
-def getAll():
+def getAll(is_active=True):
     '''
     Get all entities
     :returns: all entity
     '''
+    if is_active is not None:
+        return Dog.query.filter_by(is_active=is_active).all()
     return Dog.query.all()
 
 def get(tag):
@@ -19,7 +21,10 @@ def get(tag):
     Get all entities
     :returns: all entity
     '''
-    return Dog.query.get(tag)
+    dog = Dog.query.get(tag)
+    if dog.is_active:
+        return dog
+    return None
 
 def post(body):
     '''
