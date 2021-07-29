@@ -286,29 +286,29 @@ def _created_pre_tasks(tag, weight):
 def _getDosage(medicine, weight): 
     if medicine == "xylozine":
         if weight < 10:
-            return str(round(weight/10, 2)) + " ml"
+            return str(round(weight/10, 2), 2) + " ml"
         elif weight <= 20:
             return "1 ml"
         elif weight < 30:
-            return "1." + str(round((weight-20)/10)) + " ml"
+            return "1." + str(round((weight-20)/10, 2)) + " ml"
         else:
             return "2 ml"
     elif medicine == "ketamine":
-        return str(round(0.2 * weight)) + " ml"
+        return str(round(0.2 * weight, 2)) + " ml"
     elif medicine == "melonex":
-        return str(round(0.04 * weight)) + " ml"
+        return str(round(0.04 * weight, 2)) + " ml"
     elif medicine == "ivermectin":
-        return str(round(0.03 * weight)) + " ml"
+        return str(round(0.03 * weight, 2)) + " ml"
     elif medicine == "penicillin":
-        return str(round(0.2 * weight)) + " ml"
+        return str(round(0.2 * weight, 2)) + " ml"
     elif medicine == "belamyl":
-        return str(round(0.03 * weight)) + " ml"
+        return str(round(0.03 * weight, 2)) + " ml"
     elif medicine == "diazepam":
-        return str(round(0.05 * weight)) + " ml"
+        return str(round(0.05 * weight, 2)) + " ml"
     elif medicine == "atropine":
-        return str(round(0.0832 * weight)) + " ml"
+        return str(round(0.0832 * weight, 2)) + " ml"
     elif medicine == "ceftriaxone":
-        return str(round(0.1 * weight)) + " ml"
+        return str(round(0.1 * weight, 2)) + " ml"
     return "X ml"
 
 @api.errorhandler(AuthError)

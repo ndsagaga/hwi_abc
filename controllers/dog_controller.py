@@ -87,7 +87,7 @@ def api_create_dog():
 
 @api.route('/dog/edit', methods=['POST'])
 def api_edit_dog():
-    auth_helper.verify_auth(role_level=2.0)
+    auth_helper.verify_auth(role_level=3.0)
     print(request.files)
     user = session['user']
     if "tag" not in request.form:
