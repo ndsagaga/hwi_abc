@@ -286,7 +286,7 @@ def _created_pre_tasks(tag, weight):
 def _getDosage(medicine, weight): 
     if medicine == "xylozine":
         if weight < 10:
-            return str(round(weight/10, 2), 2) + " ml"
+            return str(round(weight/10, 2)) + " ml"
         elif weight <= 20:
             return "1 ml"
         elif weight < 30:
